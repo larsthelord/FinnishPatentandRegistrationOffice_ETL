@@ -7,7 +7,7 @@ SELECT
   municipalityCode as MunicipalityCode,
   active as Active
 FROM
-  read_json(['<<FILEPATH>>'], filename=true)
+  read_json('./PostCodes/*.json', filename=true)
 GROUP BY
   postCode,
   municipalityCode,

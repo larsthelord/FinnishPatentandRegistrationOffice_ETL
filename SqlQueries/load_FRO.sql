@@ -3,4 +3,4 @@ SELECT
   businessId ->> 'value' as businessId_value,
   *
 FROM
-  read_json('<<FILEPATH>>')
+  read_json('./data_FRO.json')

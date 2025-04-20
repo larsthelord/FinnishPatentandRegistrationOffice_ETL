@@ -9,7 +9,7 @@ FROM (
     column1 as Description,
     REPLACE(REPLACE(parse_path(filename)[-1], 'REK_KDI_', ''), '.tsv', '') as "language"
   FROM
-    read_csv(['<<FILEPATH>>'], filename = true, delim = "\t", header = false)
+    read_csv('./Descriptions/REK_KDI/*.tsv', filename = true, delim = "\t", header = false)
   ) w
 GROUP BY
   w.id
