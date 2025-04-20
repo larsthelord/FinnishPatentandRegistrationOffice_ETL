@@ -1,0 +1,15 @@
+SELECT
+    businessID,
+    "Index",
+    "Name",
+    Name_RegistrationDate,
+    Name_EndDate,
+    "Version",
+    CurrentVersion,
+    SourceID,
+    BusinessNameTypeID,
+    BusinessNameType_English,
+    BusinessNameType_Finnish,
+    BusinessNameType_Swedish
+FROM    
+    BusinessNames

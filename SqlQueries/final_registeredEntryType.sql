@@ -1,8 +1,8 @@
 SELECT
   w.id as RegisteredEntryTypeID,
-  MAX(CASE WHEN "language" = 'en' THEN Description END) as Description_English,
-  MAX(CASE WHEN "language" = 'fi' THEN Description END) as Description_Finnish,
-  MAX(CASE WHEN "language" = 'sv' THEN Description END) as Description_Swedish
+  MAX(CASE WHEN "language" = 'en' THEN Description END) as RegisteredEntryType_English,
+  MAX(CASE WHEN "language" = 'fi' THEN Description END) as RegisteredEntryType_Finnish,
+  MAX(CASE WHEN "language" = 'sv' THEN Description END) as RegisteredEntryType_Swedish
 FROM (
   SELECT
     column0 as id,

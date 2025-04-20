@@ -9,7 +9,7 @@ FROM (
 
 
 SELECT DISTINCT
-  businessId_value,
+  businessId_value as BusinessID,
   CONCAT_WS('_', register, "type") as RegisteredEntryTypeID,  /*Connect to final_registeredEntryType*/
   registrationDate::DATE as RegistrationDate,
   IFNULL(endDate, '2099-12-31')::DATE as EndDate,

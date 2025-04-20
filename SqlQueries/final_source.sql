@@ -1,8 +1,8 @@
 SELECT
   w.id as SourceID,
-  MAX(CASE WHEN "language" = 'en' THEN Description END) as Description_English,
-  MAX(CASE WHEN "language" = 'fi' THEN Description END) as Description_Finnish,
-  MAX(CASE WHEN "language" = 'sv' THEN Description END) as Description_Swedish
+  MAX(CASE WHEN "language" = 'en' THEN Description END) as Source_English,
+  MAX(CASE WHEN "language" = 'fi' THEN Description END) as Source_Finnish,
+  MAX(CASE WHEN "language" = 'sv' THEN Description END) as Source_Swedish
 FROM (
   SELECT
     column0 as id,

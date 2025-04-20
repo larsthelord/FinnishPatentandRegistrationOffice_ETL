@@ -11,7 +11,7 @@ Invoke-WebRequest -Uri $Uri -Headers @{accept = "application/zip"} -OutFile $Tem
 [System.IO.Compression.ZipFile]::ExtractToDirectory($TempFile, ".") 
 Remove-Item $TempFile.FullName -Force
 
-$BusinessFile = (Get-Item -Path ".\data*.json" | Sort-Object -Descending)[0]
+
 
 
 
@@ -24,13 +24,13 @@ if(-not (Test-Path -Path ".\Descriptions" -PathType Container)){
 }
 
 $Descriptions = @("YRMU", "REK_KDI", "TLAJI", "SELTILA", "REK", "VIRANOM", "TLAHDE", "KIELI", "TOIMI", "TOIMI2", "TOIMI3", "KONK", "SANE", "STATUS3", "SELTILA,SANE,KONK")
-$Langugages = @("en", "fi", "sv")
+$Languages = @("en", "fi", "sv")
 
 foreach($Description in $Descriptions){
     if(-not (Test-Path -Path ".\Descriptions\$Description" -PathType Container)){
         $null = New-Item -Path ".\Descriptions\$Description" -ItemType Directory
     }
-    foreach($Language in $Langugages){
+    foreach($Language in $Languages){
         $Response = Invoke-WebRequest -Uri "https://avoindata.prh.fi/opendata-ytj-api/v3/description?code=$Description&lang=$Language" -Method Get -UseBasicParsing -Headers @{accept = "text/plain"}
         $Response.Content | Out-File ".\Descriptions\$Description\$Description`_$Language.tsv"
         Start-Sleep -Milliseconds (Get-Random -Minimum 250 -Maximum 750)
@@ -38,12 +38,30 @@ foreach($Description in $Descriptions){
 }
 
 
+<#
+    Get Postcode Information
+#>
+if(-not (Test-Path -Path ".\PostCodes" -PathType Container)){
+    $null = New-Item -Path ".\PostCodes" -ItemType Directory
+}
+foreach($Language in $Languages){
+    $Response = Invoke-WebRequest -Uri "https://avoindata.prh.fi/opendata-ytj-api/v3/post_codes?lang=$Language"
+    $Response.Content | Out-File ".\PostCodes\PostCodes_$Language.json"
+    Start-Sleep -Milliseconds (Get-Random -Minimum 250 -Maximum 750)
+}
+
+
+$BusinessFile = (Get-Item -Path ".\data*.json" | Sort-Object -Descending)[0]
+$PostCodeFiles = Get-ChildItem -Path "./PostCodes"
+$BusinessNameTypeFiles = Get-ChildItem -Path "./Descriptions/TLAJI"
+
+
 Add-Type -Path ".\Powershell\duckdb\DuckDB.NET.Data.dll"
 Add-Type -Path ".\Powershell\duckdb\DuckDB.NET.Bindings.dll"
 
 #Get SourceDescription
-
 $SourceFiles = Get-ChildItem -Path "./Descriptions/TLAHDE/*"
+
 
 $DuckDbConnection = [DuckDB.NET.Data.DuckDBConnection]::new("DataSource = :memory:")
 $DuckDbConnection.Open()
@@ -105,20 +123,71 @@ $AuthorityDatatable = [System.Data.DataTable]::new()
 $AuthorityDatatable.Load($Reader)
 
 
+#Load PostCodeInformation
+$DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\load_postCodes.sql").Replace("<<FILEPATH>>", ($PostCodeFiles.FullName -join "','"))
+$null = $DuckdbCommand.ExecuteNonQuery()
 
 #Load main file into memory
 $DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\load_FRO.sql").Replace("<<FILEPATH>>", $BusinessFile.FullName)
 $null = $DuckdbCommand.ExecuteNonQuery()
 
-
-#Unpack Registered Entries
-$DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\load_FRO_RegisteredEntries.sql")
+#Load CompanyNameType into memory
+$DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\load_businessNameType.sql").Replace("<<FILEPATH>>", ($BusinessNAmeTypeFiles.FullName -join "','"))
 $null = $DuckdbCommand.ExecuteNonQuery()
 
+
+
+#Unpack Registered Entries
 $DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\final_registeredEntries.sql")
 $Reader = $DuckdbCommand.ExecuteReader()
-
 
 #Load Source to Register: -- Write these to your storage instead of datatable
 $RegisteredEntriesDatatable = [System.Data.DataTable]::new()
 $RegisteredEntriesDatatable.Load($Reader)
+
+
+
+#Unpack BusinessEntries
+$DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\final_businessAddress.sql")
+$Reader = $DuckdbCommand.ExecuteReader()
+
+#Load BusinessEntries to Register: -- Write these to your storage instead of datatable
+$BusinessAddressDatatable = [System.Data.DataTable]::new()
+$BusinessAddressDatatable.Load($Reader)
+
+
+#Load BusinessNames
+$DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\load_businessNames.sql")
+$null = $DuckdbCommand.ExecuteNonQuery()
+
+#Unpack BusinessNames
+$DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\final_businessNames.sql")
+$Reader = $DuckdbCommand.ExecuteReader()
+
+#Load BusinessNames to Register: -- Write these to your storage instead of datatable
+$BusinessNamesDatatable = [System.Data.DataTable]::new()
+$BusinessNamesDatatable.Load($Reader)
+
+
+
+#Unpack BusinessAddress
+$DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\final_businessAddress.sql")
+$Reader = $DuckdbCommand.ExecuteReader()
+
+#Load BusinessAddress to Register: -- Write these to your storage instead of datatable
+$BusinessAddressDatatable = [System.Data.DataTable]::new()
+$BusinessAddressDatatable.Load($Reader)
+
+
+#Unpack BusinessEntries
+$DuckdbCommand.CommandText = (Get-Content ".\SqlQueries\final_businessInformation.sql")
+$Reader = $DuckdbCommand.ExecuteReader()
+
+#Load BusinessEntries to Register: -- Write these to your storage instead of datatable
+$BusinessInformationDatatable = [System.Data.DataTable]::new()
+$BusinessInformationDatatable.Load($Reader)
+
+
+
+
+

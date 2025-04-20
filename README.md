@@ -1,7 +1,5 @@
 # Finnish Patentand Registration Office -- ETL
 
-IN PROGRESS
-
 ## English
 
 Download and ETL-process of data from Finnish Patent and Registration Office
@@ -20,7 +18,12 @@ Files / Tables with supporting information:
     - Which registry in Finland the business is registered with, descriptions in English, Finnish and Swedish
 - final_registeredEntryType:
     - What type of business the business is, descriptions in English, Finnish and Swedish
-
+- final_businessAddress:
+    - The postal and street address of the business
+- final_businessNames:
+    - Different names by which the business is knowsn
+- final_businessInformation:
+    - Main table. General information about businesses.
 
 
 
