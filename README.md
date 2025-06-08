@@ -1,4 +1,4 @@
-# Finnish Patentand Registration Office -- ETL
+# Finnish Patent and Registration Office -- ETL
 
 ## English
 
